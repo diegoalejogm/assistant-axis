@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""
+Same-trait detection comparison: Assistant Axis projection vs. persona-vector
+projection, both correlated against each condition's own trait judge score.
+
+NOTE on scope: a true cross-trait discrimination test ("does the Axis fire
+similarly on evil, sycophantic, AND hallucinating responses, i.e. is it
+trait-agnostic?") is NOT computable from this data - each trait's implicit
+CSV contains only that trait's own judge score for that trait's own prompts/
+responses; there is no shared response set scored on all three traits to
+correlate row-for-row. What IS computable, and what this script reports, is
+each condition's Assistant-Axis-r side by side with its persona-vector-r: if
+the Axis matches or beats the trait-specific vector's r on its OWN trait, the
+general axis is at least as good a monitor for that specific implicit
+condition, even without answering the separate discrimination question.
+
+Reads the *_axis.csv outputs of project_persona_vectors_responses.py (one
+file per trait x condition, each carrying its own trait's judge score plus
+assistant_axis_projection).
+
+Usage:
+    uv run scripts/analyze_persona_vectors_projections.py \
+        --persona_vectors_dir /workspace/persona_vectors
+"""
+
+import argparse
+from pathlib import Path
+
+import pandas as pd
+from scipy.stats import pearsonr
+
+TRAITS = ["evil", "sycophantic", "hallucinating"]
+CONDITIONS = ["implicit_described", "implicit_contextual"]
+# best explicit layer per trait, from WRITEUP_32B.md Section 2
+BEST_LAYER = {"evil": 30, "sycophantic": 28, "hallucinating": 60}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--persona_vectors_dir", required=True)
+    args = parser.parse_args()
+
+    eval_dir = Path(args.persona_vectors_dir) / "eval_persona_eval" / "Qwen3-32B"
+
+    rows = []
+    for trait in TRAITS:
+        for cond in CONDITIONS:
+            path = eval_dir / f"{trait}_{cond}_axis.csv"
+            if not path.exists():
+                print(f"MISSING: {path}")
+                continue
+            df = pd.read_csv(path)
+            axis_r, axis_p = pearsonr(df["assistant_axis_projection"], df[trait])
+
+            vec_col = f"Qwen3-32B_{trait}_response_avg_diff_proj_layer{BEST_LAYER[trait]}"
+            vec_r = None
+            if vec_col in df.columns:
+                vec_r, _ = pearsonr(df[vec_col], df[trait])
+
+            rows.append({
+                "trait": trait,
+                "condition": cond,
+                "n": len(df),
+                "assistant_axis_r": round(axis_r, 3),
+                "assistant_axis_p": axis_p,
+                "persona_vector_r": round(vec_r, 3) if vec_r is not None else "N/A",
+            })
+
+    summary = pd.DataFrame(rows)
+    print(summary.to_string(index=False))
+    summary.to_csv("results_assistant_axis_vs_persona_vector.csv", index=False)
+    print("\nWrote results_assistant_axis_vs_persona_vector.csv")
+
+    print("\nNote: Assistant Axis projection is signed so HIGHER = more assistant-like, "
+          "LOWER = more role-playing. Expect assistant_axis_r to be NEGATIVE (more trait "
+          "expression -> lower projection), opposite sign convention from persona_vector_r.")
+
+
+if __name__ == "__main__":
+    main()
