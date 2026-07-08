@@ -11,10 +11,13 @@ columns, extracts mean assistant-turn activations at Qwen3-32B's target layer
 (32), projects onto the pre-computed axis, and writes the projection back as a
 new column alongside the existing judge scores.
 
+Reads only from persona_vectors' directory; never writes there - all outputs
+go to this repo's own results/ directory (see run_all_persona_vectors_projections.sh).
+
 Usage:
     uv run scripts/project_persona_vectors_responses.py \
         --input_csv /workspace/persona_vectors/eval_persona_eval/Qwen3-32B/evil_implicit_contextual.csv \
-        --output_csv /workspace/persona_vectors/eval_persona_eval/Qwen3-32B/evil_implicit_contextual_axis.csv \
+        --output_csv results/persona_vectors_projections/evil_implicit_contextual_axis.csv \
         --axis_path /workspace/assistant-axis-cache/qwen-3-32b/assistant_axis.pt
 """
 

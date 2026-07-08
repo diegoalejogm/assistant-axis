@@ -19,8 +19,7 @@ file per trait x condition, each carrying its own trait's judge score plus
 assistant_axis_projection).
 
 Usage:
-    uv run scripts/analyze_persona_vectors_projections.py \
-        --persona_vectors_dir /workspace/persona_vectors
+    uv run scripts/analyze_persona_vectors_projections.py
 """
 
 import argparse
@@ -37,10 +36,14 @@ BEST_LAYER = {"evil": 30, "sycophantic": 28, "hallucinating": 60}
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--persona_vectors_dir", required=True)
+    parser.add_argument(
+        "--results_dir",
+        default=str(Path(__file__).parent.parent / "results" / "persona_vectors_projections"),
+        help="Directory containing this repo's own *_axis.csv outputs (never persona_vectors' tree)",
+    )
     args = parser.parse_args()
 
-    eval_dir = Path(args.persona_vectors_dir) / "eval_persona_eval" / "Qwen3-32B"
+    eval_dir = Path(args.results_dir)
 
     rows = []
     for trait in TRAITS:
