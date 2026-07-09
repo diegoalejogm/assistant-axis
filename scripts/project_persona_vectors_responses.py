@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """
-Project persona_vectors implicit-elicitation responses onto the pre-computed
+Project persona_vectors elicitation-condition responses onto the pre-computed
 Assistant Axis for Qwen3-32B.
 
 Answers: can the Assistant Axis (a general, non-trait-specific persona-drift
-detector) monitor implicit trait elicitation as well as trait-specific persona
-vectors do? Reads response CSVs from the diegoalejogm/persona_vectors repo
-(sibling directory), reconstructs conversations from the `prompt`/`answer`
-columns, extracts mean assistant-turn activations at Qwen3-32B's target layer
-(32), projects onto the pre-computed axis, and writes the projection back as a
-new column alongside the existing judge scores.
+detector) monitor trait elicitation as well as trait-specific persona vectors
+do - and does that hold up as elicitation moves from explicit to implicit?
+Run against all three conditions (explicit, implicit_described,
+implicit_contextual), not just implicit, so the explicit-condition comparison
+serves as each trait's own baseline. Reads response CSVs from the
+diegoalejogm/persona_vectors repo (sibling directory), reconstructs
+conversations from the `prompt`/`answer` columns, extracts mean assistant-turn
+activations at Qwen3-32B's target layer (32), projects onto the pre-computed
+axis, and writes the projection back as a new column alongside the existing
+judge scores.
 
 Reads only from persona_vectors' directory; never writes there - all outputs
 go to this repo's own results/ directory (see run_all_persona_vectors_projections.sh).

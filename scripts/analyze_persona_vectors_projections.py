@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
 Same-trait detection comparison: Assistant Axis projection vs. persona-vector
-projection, both correlated against each condition's own trait judge score.
+projection, both correlated against each condition's own trait judge score,
+across all three elicitation conditions (explicit, implicit_described,
+implicit_contextual). Including explicit lets us check whether the relative
+gap between the general Assistant Axis and the trait-specific vector changes
+as elicitation moves from explicit to implicit - not just how the Axis does
+on implicit prompts in isolation.
 
 NOTE on scope: a true cross-trait discrimination test ("does the Axis fire
 similarly on evil, sycophantic, AND hallucinating responses, i.e. is it
@@ -29,7 +34,7 @@ import pandas as pd
 from scipy.stats import pearsonr
 
 TRAITS = ["evil", "sycophantic", "hallucinating"]
-CONDITIONS = ["implicit_described", "implicit_contextual"]
+CONDITIONS = ["explicit", "implicit_described", "implicit_contextual"]
 # best explicit layer per trait, from WRITEUP_32B.md Section 2
 BEST_LAYER = {"evil": 30, "sycophantic": 28, "hallucinating": 60}
 
