@@ -31,7 +31,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 
 TRAITS = ["evil", "sycophantic", "hallucinating"]
 CONDITIONS = ["explicit", "implicit_described", "implicit_contextual"]
@@ -59,19 +59,22 @@ def main():
                 continue
             df = pd.read_csv(path)
             axis_r, axis_p = pearsonr(df["assistant_axis_projection"], df[trait])
+            axis_rho, axis_rho_p = spearmanr(df["assistant_axis_projection"], df[trait])
 
             vec_col = f"Qwen3-32B_{trait}_response_avg_diff_proj_layer{BEST_LAYER[trait]}"
-            vec_r = None
+            vec_r = vec_rho = None
             if vec_col in df.columns:
                 vec_r, _ = pearsonr(df[vec_col], df[trait])
+                vec_rho, _ = spearmanr(df[vec_col], df[trait])
 
             rows.append({
                 "trait": trait,
                 "condition": cond,
                 "n": len(df),
-                "assistant_axis_r": round(axis_r, 3),
-                "assistant_axis_p": axis_p,
-                "persona_vector_r": round(vec_r, 3) if vec_r is not None else "N/A",
+                "assistant_axis_pearson_r": round(axis_r, 3),
+                "assistant_axis_spearman_rho": round(axis_rho, 3),
+                "persona_vector_pearson_r": round(vec_r, 3) if vec_r is not None else "N/A",
+                "persona_vector_spearman_rho": round(vec_rho, 3) if vec_rho is not None else "N/A",
             })
 
     summary = pd.DataFrame(rows)
@@ -80,8 +83,13 @@ def main():
     print("\nWrote results_assistant_axis_vs_persona_vector.csv")
 
     print("\nNote: Assistant Axis projection is signed so HIGHER = more assistant-like, "
-          "LOWER = more role-playing. Expect assistant_axis_r to be NEGATIVE (more trait "
-          "expression -> lower projection), opposite sign convention from persona_vector_r.")
+          "LOWER = more role-playing. Expect assistant_axis_* to be NEGATIVE (more trait "
+          "expression -> lower projection), opposite sign convention from persona_vector_*.")
+    print("\nSpearman rho is included alongside Pearson r as a robustness check: rho only "
+          "requires a monotonic (not necessarily linear) relationship and is less sensitive "
+          "to outliers/floor effects, both relevant given how skewed several conditions' "
+          "judge-score distributions are. If rho and r tell the same story for a given cell, "
+          "that's reassurance the r-based finding isn't a linearity/outlier artifact.")
 
 
 if __name__ == "__main__":
