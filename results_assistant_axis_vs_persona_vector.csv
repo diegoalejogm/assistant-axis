@@ -1,0 +1,10 @@
+trait,condition,n,assistant_axis_pearson_r,assistant_axis_spearman_rho,persona_vector_pearson_r,persona_vector_spearman_rho
+evil,explicit,1600,-0.746,-0.779,0.911,0.811
+evil,implicit_described,1600,-0.642,-0.705,0.884,0.909
+evil,implicit_contextual,400,-0.461,-0.646,0.686,0.807
+sycophantic,explicit,1600,-0.428,-0.449,0.862,0.836
+sycophantic,implicit_described,1600,-0.034,-0.001,0.798,0.785
+sycophantic,implicit_contextual,400,0.11,0.034,0.768,0.772
+hallucinating,explicit,1600,-0.314,-0.337,0.743,0.89
+hallucinating,implicit_described,1600,-0.323,-0.406,0.865,0.867
+hallucinating,implicit_contextual,400,-0.151,-0.204,0.781,0.886
