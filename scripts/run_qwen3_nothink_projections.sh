@@ -5,6 +5,7 @@
 # from persona_vectors' directory; never writes there - all outputs land in
 # this repo's own results/ directory, mirroring run_all_persona_vectors_projections.sh.
 set -uo pipefail
+export HF_HOME=/workspace/.cache/huggingface
 cd "$(dirname "$0")/.."
 PERSONA_VECTORS_DIR="${PERSONA_VECTORS_DIR:-/workspace/persona_vectors}"
 AXIS_PATH="${AXIS_PATH:-/workspace/assistant-axis-cache/qwen-3-32b/assistant_axis.pt}"
@@ -16,6 +17,10 @@ for trait in evil sycophantic hallucinating; do
   for cond in explicit implicit_described implicit_contextual; do
     in_csv="$EVAL_DIR/${trait}_${cond}_nothink.csv"
     out_csv="$OUT_DIR/${trait}_${cond}_nothink_axis.csv"
+    if [ -s "$out_csv" ]; then
+      echo ">>> $(date +%H:%M:%S) $trait / $cond -> $out_csv (already exists, skipping)"
+      continue
+    fi
     echo ">>> $(date +%H:%M:%S) $trait / $cond -> $out_csv"
     .venv/bin/python scripts/project_persona_vectors_responses.py \
       --input_csv "$in_csv" \
