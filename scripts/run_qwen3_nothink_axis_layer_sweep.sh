@@ -1,9 +1,16 @@
 #!/bin/bash
 # Fix 3: Assistant Axis layer-fairness sweep on the Qwen3-32B thinking-off
-# nothink data. Extracts all even layers (0-64) per conversation in one
-# forward pass, instead of only the fixed target_layer (32), so the
+# nothink data. Extracts all even layers (0-62, 32 values) per conversation
+# in one forward pass, instead of only the fixed target_layer (32), so the
 # per-condition best-Axis-layer can be found and compared against the
 # fixed-layer numbers already computed.
+#
+# --batch_size 2 (vs. the script's default 16): extracting 32 layers instead
+# of 1 multiplies the hook-captured activation memory ~32x per batch on top
+# of the already-large model. At batch_size=16 this caused a CUDA OOM on the
+# first job (74.74/79.25 GiB already in use, failing to allocate 4.83 GiB
+# more) - it looked like a hang for ~10+ min before finally erroring, since
+# PyTorch was thrashing on allocation attempts rather than actually stuck.
 set -uo pipefail
 export HF_HOME=/workspace/.cache/huggingface
 cd "$(dirname "$0")/.."
@@ -26,7 +33,8 @@ for trait in evil sycophantic hallucinating; do
       --input_csv "$in_csv" \
       --output_csv "$out_csv" \
       --axis_path "$AXIS_PATH" \
-      --enable_thinking False || echo "!!! FAILED: $trait / $cond"
+      --enable_thinking False \
+      --batch_size 2 || echo "!!! FAILED: $trait / $cond"
   done
 done
 echo "ALL_NOTHINK_AXIS_LAYER_SWEEP_DONE $(date +%H:%M:%S)"

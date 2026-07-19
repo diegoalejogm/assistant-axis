@@ -38,7 +38,12 @@ from assistant_axis import load_axis, project
 from assistant_axis.internals import ProbingModel, ConversationEncoder, ActivationExtractor, SpanMapper
 
 MODEL_NAME = "Qwen/Qwen3-32B"
-SWEEP_LAYERS = list(range(0, 65, 2))  # matches cal_projection.py's even-layer convention
+SWEEP_LAYERS = list(range(0, 64, 2))  # even layers 0-62 (32 values). NOTE: this differs from
+# cal_projection.py's persona-vector convention (0-64, 33 values, matching HF hidden_states'
+# extra embedding-output entry). The Assistant Axis extraction hooks raw nn.Module transformer
+# layers via probing_model.get_layers(), which only has valid indices 0-63 for this 64-layer
+# model - requesting layer 64 raises IndexError. Confirmed via the pre-computed axis tensor's
+# own shape, torch.Size([64, 5120]) - only 64 valid layer rows.
 
 TURN_RE = re.compile(r"<\|im_start\|>(system|user|assistant)\n(.*?)(?:<\|im_end\|>|\Z)", re.DOTALL)
 
